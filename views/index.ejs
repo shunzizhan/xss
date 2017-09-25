@@ -3,6 +3,38 @@
   <head>
     <title><%= title %></title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src='/javascripts/encode.js'></script>
+    <script src='/javascripts/DomParse.js'></script>
+    <script>
+      var parse = function(str){
+        var results = '';
+        try{
+          HTMLParse(he.unescape(str,{strict:true}),{
+            start:function(tag,attrs,unary){
+              results += '<'+tag;
+              for(var i = 0,len=attrs.length;i<len;i++){
+                results += '  '+ attrs[i].name + '="' + attrs[i].escaped + '"';
+              }
+              results += (unary?'/':'')+">"
+            },
+            end:function(tag){
+              results += '</' + tag + ">";
+            },
+            chars:function(text){
+              results += text;
+            },
+            comment:function(text){
+              results += "<!--" + text + "-->";
+            }
+          })
+          return results;
+        }catch(e){
+          console.log(e)
+        }finally{
+
+        }
+      }
+    </script>
   </head>
   <body>
     <h1><%= title %></h1>
@@ -10,8 +42,51 @@
     <div>
     	<%- xss %>
     </div>
-    <textarea name="" id="" cols="30" rows="10">
-    	<p></p>
-    </textarea>
+    <textarea name="name" id="txt" cols="80" rows="8"><p>sks<img src="null" onerror="alert(1)" alt=""></p></textarea>
+
+    <button type="button" id="btn">评论</button>
+    <button type="button" id="get">获取评论</button>
+
+    <script>
+      var btn = document.getElementById('btn');
+      var get = document.getElementById('get');
+      var txt = document.getElementById('txt');
+
+      btn.addEventListener('click',function(){
+        var xhr = new XMLHttpRequest();
+        var url = '/sendComment?comment=' + txt.value.replace(/\n/g,'');
+        xhr.open('Get',url,true);
+        xhr.onreadystatechange = function(){
+          if(xhr.readyState == 4){
+            if(xhr.status == 200){
+              console.log(200);
+            }else{
+              console.log('error');
+            }
+          }
+        }
+        xhr.send();
+      })
+
+      get.addEventListener('click',function(){
+        var xhr = new XMLHttpRequest();
+        var url = '/getComment';
+        xhr.open('Get',url,true);
+        xhr.onreadystatechange = function(){
+          if(xhr.readyState == 4){
+            if(xhr.status == 200){
+              // console.log(200);
+              var com = parse(JSON.parse(xhr.response).comment);
+              var txt = document.createElement('span');
+              txt.innerHTML = com;
+              document.body.appendChild(txt);
+            }else{
+              console.log('error');
+            }
+          }
+        }
+        xhr.send();
+      })
+    </script>
   </body>
 </html>

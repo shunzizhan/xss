@@ -21,8 +21,13 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express',xss: req.query.xss});
 });
 
-router.get('/comment',function(req,res,next){
+router.get('/sendComment',function(req,res,next){
+	// res.set('X-XSS-Protection',0);
+	console.log('here');
 	comments.v = html_encode(req.query.comment);
+	res.json({
+		status:200
+	})
 });
 
 router.get('/getComment',function(req,res,next){
